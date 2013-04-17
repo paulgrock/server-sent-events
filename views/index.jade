@@ -1,0 +1,33 @@
+extends layout
+
+block content
+  h1= title
+  p Welcome to #{title}
+  button#setup Set notifications
+
+  //- script(src='sse.js')
+  script
+    var source = new EventSource('/stats');
+
+    var notify = function(message){
+      console.log(message);
+      console.log(webkitNotifications.checkPermission());
+      if(webkitNotifications.checkPermission() === 0) {
+        console.log('inner message');
+        if(message) {
+          notification = webkitNotifications.createNotification('/images/France.png',
+            'Update', message.participants[0].name + ' just won. They now have ' + message.participants[0].score + ' wins');
+          notification.show();
+        }
+      } else {
+        webkitNotifications.requestPermission();
+      }
+    }
+
+    source.addEventListener('update', function(message){
+      notify(JSON.parse(message.data))
+    });
+
+    document.getElementById('setup').addEventListener('click', function(){
+      notify();
+    })
